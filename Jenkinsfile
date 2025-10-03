@@ -1,10 +1,13 @@
 pipeline {
     agent {
-        docker { image 'node:16' }
+        docker {
+            image 'node:16'
+            args '-u root --env DOCKER_HOST=tcp://dind:2376 --env DOCKER_TLS_VERIFY=1 --env DOCKER_CERT_PATH=/certs/client -v /certs/client:/certs/client:ro'
+        }
     }
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials-id')
-        DOCKER_IMAGE = "ben278/aws-express-sample"
+        DOCKER_IMAGE = "Ben278/aws-express-sample"
         SNYK_TOKEN = credentials('snyk-token-id')
     }
     stages {
@@ -15,7 +18,7 @@ pipeline {
         }
         stage('Run Unit Tests') {
             steps {
-                sh 'npm test || exit 0' // Exit 0 prevents failure if no tests exist
+                sh 'npm test || exit 0'
             }
         }
         stage('Build Docker Image') {
@@ -33,7 +36,7 @@ pipeline {
             steps {
                 sh 'npm install -g snyk'
                 sh 'snyk auth $SNYK_TOKEN'
-                sh 'snyk test --severity-threshold=high || exit 1' // Fails if high/critical vulnerabilities are found
+                sh 'snyk test --severity-threshold=high || exit 1'
             }
         }
     }
