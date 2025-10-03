@@ -1,5 +1,5 @@
 pipeline {
-    agent any // Run on Jenkins master, which has DinD
+    agent any // Run on Jenkins master with DinD
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials-id')
         DOCKER_IMAGE = "Ben-02/aws-express-sample"
@@ -11,15 +11,19 @@ pipeline {
     stages {
         stage('Install Dependencies') {
             steps {
-                docker.image('node:16').inside {
-                    sh 'npm install --save'
+                script {
+                    docker.image('node:16').inside {
+                        sh 'npm install --save'
+                    }
                 }
             }
         }
         stage('Run Unit Tests') {
             steps {
-                docker.image('node:16').inside {
-                    sh 'npm test || exit 0'
+                script {
+                    docker.image('node:16').inside {
+                        sh 'npm test || exit 0'
+                    }
                 }
             }
         }
@@ -36,10 +40,12 @@ pipeline {
         }
         stage('Security Scan') {
             steps {
-                docker.image('node:16').inside {
-                    sh 'npm install -g snyk'
-                    sh 'snyk auth $SNYK_TOKEN'
-                    sh 'snyk test --severity-threshold=high || exit 1'
+                script {
+                    docker.image('node:16').inside {
+                        sh 'npm install -g snyk'
+                        sh 'snyk auth $SNYK_TOKEN'
+                        sh 'snyk test --severity-threshold=high || exit 1'
+                    }
                 }
             }
         }
