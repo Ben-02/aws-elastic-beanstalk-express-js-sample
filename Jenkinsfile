@@ -2,7 +2,7 @@ pipeline {
     agent any // Run on Jenkins master, which has DinD
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials-id')
-        DOCKER_IMAGE = "Ben278/aws-express-sample"
+        DOCKER_IMAGE = "Ben-02/aws-express-sample"
         SNYK_TOKEN = credentials('snyk-token-id')
         DOCKER_HOST = 'tcp://dind:2376' // Point to DinD
         DOCKER_TLS_VERIFY = '1'
