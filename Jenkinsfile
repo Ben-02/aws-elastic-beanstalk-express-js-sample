@@ -1,30 +1,27 @@
 pipeline {
-    agent any // Run on Jenkins master with DinD
+    agent {
+        docker {
+            image 'node:16'
+            args '-u 0:0'
+        }
+    }
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials-id')
         DOCKER_IMAGE = "Ben278/aws-express-sample"
         SNYK_TOKEN = credentials('snyk-token-id')
-        DOCKER_HOST = 'tcp://dind:2376' // Point to DinD
+        DOCKER_HOST = 'tcp://dind:2376'
         DOCKER_TLS_VERIFY = '1'
         DOCKER_CERT_PATH = '/certs/client'
     }
     stages {
         stage('Install Dependencies') {
             steps {
-                script {
-                    docker.image('node:16').inside {
-                        sh 'npm install --save'
-                    }
-                }
+                sh 'npm install --save'
             }
         }
         stage('Run Unit Tests') {
             steps {
-                script {
-                    docker.image('node:16').inside {
-                        sh 'npm test || exit 0'
-                    }
-                }
+                sh 'npm test || exit 0'
             }
         }
         stage('Build Docker Image') {
@@ -40,19 +37,17 @@ pipeline {
         }
         stage('Security Scan') {
             steps {
-                script {
-                    docker.image('node:16').inside {
-                        sh 'npm install -g snyk'
-                        sh 'snyk auth $SNYK_TOKEN'
-                        sh 'snyk test --severity-threshold=high || exit 1'
-                    }
-                }
+                sh 'npm install -g snyk'
+                sh 'snyk auth --token=$SNYK_TOKEN'
+                sh 'snyk test --severity-threshold=high || exit 1'
             }
         }
     }
     post {
         always {
-            sh 'docker logout'
+            sh 'docker logout || true'
         }
     }
 }
+
+
