@@ -1,8 +1,8 @@
 pipeline {
     agent {
         docker {
-            image 'node:16'
-            args '-u 0:0'
+            image 'docker:dind'
+            args '-v /var/run/docker.sock:/var/run/docker.sock --privileged -v /snap/bin/docker:/usr/bin/docker'
         }
     }
     environment {
@@ -16,12 +16,12 @@ pipeline {
     stages {
         stage('Install Dependencies') {
             steps {
-                sh 'npm install --save'
+                sh 'docker run --rm -v $(pwd):/app node:16 npm install --save'
             }
         }
         stage('Run Unit Tests') {
             steps {
-                sh 'npm test || exit 0'
+                sh 'docker run --rm -v $(pwd):/app node:16 npm test'
             }
         }
         stage('Build Docker Image') {
@@ -37,9 +37,7 @@ pipeline {
         }
         stage('Security Scan') {
             steps {
-                sh 'npm install -g snyk'
-                sh 'snyk auth --token=$SNYK_TOKEN'
-                sh 'snyk test --severity-threshold=high || exit 1'
+                sh 'docker run --rm -v $(pwd):/app node:16 sh -c "npm install -g snyk && snyk auth --token=$SNYK_TOKEN && snyk test --severity-threshold=high"'
             }
         }
     }
@@ -49,5 +47,3 @@ pipeline {
         }
     }
 }
-
-
