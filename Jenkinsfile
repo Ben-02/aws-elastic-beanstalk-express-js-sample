@@ -15,7 +15,7 @@ pipeline {
         }
         stage('Run Unit Tests') {
             steps {
-                sh 'npm test || exit 0' // Exit 0 prevents failure if no tests exist
+                sh 'npm test || exit 0'
             }
         }
         stage('Build Docker Image') {
@@ -33,7 +33,7 @@ pipeline {
             steps {
                 sh 'npm install -g snyk'
                 sh 'snyk auth $SNYK_TOKEN'
-                sh 'snyk test --severity-threshold=high || exit 1' // Fails if high/critical vulnerabilities are found
+                sh 'snyk test --severity-threshold=high || exit 1'
             }
         }
     }
